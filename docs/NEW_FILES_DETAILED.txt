@@ -1,0 +1,36 @@
+================================================================================
+NEW_FILES_DETAILED.txt — File mới và vai trò
+================================================================================
+
+Package robot_mission_system (src/robot_mission_system/)
+--------------------------------------------------------------------------------
+STT | File/Thư mục                          | Vai trò
+----|----------------------------------------|----------------------------------
+ 1  | package.xml                            | Khai báo ament_python + phụ thuộc
+ 2  | setup.py / setup.cfg                   | Cài console_scripts + data_files
+ 3  | resource/robot_mission_system         | Marker ament index
+ 4  | robot_mission_system/__init__.py      | Package Python
+ 5  | robot_mission_system/waypoint_repository.py | Lưu/đọc YAML, backup .bak
+ 6  | robot_mission_system/precision_arrival.py   | Căn yaw qua cmd_vel_precision
+ 7  | robot_mission_system/nav_executor.py        | Action NavigateToPose
+ 8  | robot_mission_system/obstacle_supervisor.py | Scan stale + cone phía trước
+ 9  | robot_mission_system/mission_manager.py     | Node điều phối mission
+10  | robot_mission_system/teach_waypoint.py      | Node teach từ AMCL
+11  | robot_mission_system/system_status.py       | Node log snapshot (tuỳ chọn)
+12  | robot_mission_system/operator_cli.py        | CLI tiện dụng
+13  | config/mission_params.yaml             | Tham số mặc định
+14  | launch/mission_stack.launch.py         | Bringup teach + mission (+ status)
+15  | data/.gitkeep                          | Giữ cấu trúc data/
+
+articubot_one
+--------------------------------------------------------------------------------
+16  | launch/real_autonomy_stack.launch.py   | Gợi ý: robot + ldlidar + loc + nav + mission
+
+docs/
+--------------------------------------------------------------------------------
+17  | docs/*.txt (8 file)                    | Bàn giao vận hành / thiết kế
+
+Console entry points (sau colcon install):
+  teach_waypoint, mission_manager, system_status, operator_cli
+
+================================================================================

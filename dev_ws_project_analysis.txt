@@ -1,0 +1,476 @@
+================================================================================
+                    ROS2 WORKSPACE PROJECT ANALYSIS REPORT
+                    Generated: 2026-04-19
+                    Workspace: d:\NCKH\ROS2\Ros2
+================================================================================
+
+================================================================================
+1. FULL DIRECTORY TREE
+================================================================================
+
+d:\NCKH\ROS2\Ros2\
+├── .git/
+├── .gitignore
+├── my_room_map.pgm              # Map image file (PGM format)
+├── my_room_map.yaml             # Map metadata (resolution: 0.05, origin: [-1.88, -0.869, 0])
+└── src/
+    ├── articubot_one/           # MAIN ROBOT PACKAGE (bringup, config, description, launch, worlds)
+    │   ├── CMakeLists.txt
+    │   ├── package.xml
+    │   ├── README.md
+    │   ├── config/
+    │   │   ├── ball_tracker_params_robot.yaml   # Ball HSV thresholds for real robot
+    │   │   ├── ball_tracker_params_sim.yaml     # Ball HSV thresholds for simulation
+    │   │   ├── drive_bot.rviz                   # RViz config for driving
+    │   │   ├── empty.yaml                       # Empty YAML (placeholder)
+    │   │   ├── gaz_ros2_ctl_use_sim.yaml        # Gazebo ros2_control sim flag
+    │   │   ├── gazebo_params.yaml               # Gazebo parameters
+    │   │   ├── joystick.yaml                    # Joy/teleop config
+    │   │   ├── main.rviz                        # Main RViz config
+    │   │   ├── map.rviz                         # Map RViz config
+    │   │   ├── mapper_params_online_async.yaml  # SLAM Toolbox async params
+    │   │   ├── my_controllers.yaml              # ros2_control diff_drive + joint_broad
+    │   │   ├── nav2_params.yaml                 # Nav2 FULL parameter file (AMCL, costmaps, planner, etc.)
+    │   │   ├── twist_mux.yaml                   # Twist mux priority (nav=10, tracker=20, joy=100)
+    │   │   └── view_bot.rviz                    # RViz config for viewing robot
+    │   ├── description/
+    │   │   ├── camera.xacro          # Camera link + Gazebo camera plugin
+    │   │   ├── depth_camera.xacro    # Depth camera (commented out in robot.urdf.xacro)
+    │   │   ├── face.xacro            # Decorative face link (eyes + mouth)
+    │   │   ├── gazebo_control.xacro  # Gazebo diff_drive plugin (when NOT using ros2_control)
+    │   │   ├── inertial_macros.xacro # Inertial calculation macros (box, sphere, cylinder)
+    │   │   ├── lidar.xacro           # Laser frame + Gazebo ray sensor plugin (publishes /scan)
+    │   │   ├── robot.urdf.xacro      # ROOT URDF - includes all xacros
+    │   │   ├── robot_core.xacro      # Base links, chassis, wheels, caster (dimensions defined)
+    │   │   └── ros2_control.xacro    # ros2_control hardware (RealRobot: diffdrive_arduino / GazeboSystem)
+    │   ├── launch/
+    │   │   ├── ball_tracker.launch.py    # Launch ball tracker (sim/real params switching)
+    │   │   ├── camera.launch.py          # Launch v4l2_camera node
+    │   │   ├── joystick.launch.py        # Launch joy + teleop_twist_joy
+    │   │   ├── launch_robot.launch.py    # MAIN REAL ROBOT LAUNCH (rsp, twist_mux, controllers)
+    │   │   ├── launch_sim.launch.py      # MAIN SIM LAUNCH (rsp, gazebo, spawn, controllers)
+    │   │   ├── localization_launch.py    # AMCL localization (map_server + amcl + lifecycle)
+    │   │   ├── navigation_launch.py      # FULL Nav2 stack (controller, planner, behavior, bt_navigator, waypoint_follower, velocity_smoother)
+    │   │   ├── online_async_launch.py    # SLAM Toolbox async mapping
+    │   │   ├── rplidar.launch.py         # RPLiDAR launch (hardcoded serial path)
+    │   │   └── rsp.launch.py             # Robot State Publisher (processes xacro)
+    │   └── worlds/
+    │       ├── empty.world               # Empty Gazebo world
+    │       └── obstacles.world           # Gazebo world with obstacles
+    │
+    ├── ball_tracker/             # CAMERA BALL DETECTION PACKAGE (Python, ament_python)
+    │   ├── package.xml
+    │   ├── setup.py
+    │   ├── setup.cfg
+    │   ├── README.md
+    │   ├── .gitignore
+    │   ├── resource/
+    │   │   └── ball_tracker          # ament_python resource marker
+    │   ├── config/
+    │   │   └── ball_tracker_params_example.yaml   # Example ball detection params
+    │   ├── launch/
+    │   │   ├── ball_tracker.launch.py            # Main ball tracker launch (detect + follow + 3d)
+    │   │   └── example_launch_include.launch.py  # Example of including ball_tracker
+    │   ├── test/                                  # Empty test placeholders
+    │   └── ball_tracker/
+    │       ├── __init__.py
+    │       ├── detect_ball.py         # Detect ball using OpenCV HSV + SimpleBlobDetector
+    │       ├── detect_ball_3d.py       # Estimate 3D position from 2D detection
+    │       ├── follow_ball.py          # Follow ball: publish cmd_vel based on ball position
+    │       └── process_image.py       # Image processing utilities (HSV filter, blob detect)
+    │
+    ├── diffdrive_arduino/        # ARDUINO DIFF DRIVE HARDWARE PLUGIN (C++, ament_cmake)
+    │   ├── CMakeLists.txt
+    │   ├── package.xml
+    │   ├── diffdrive_arduino.xml     # pluginlib export descriptor
+    │   ├── README.md
+    │   ├── doc/
+    │   │   └── doc_conf.py
+    │   ├── hardware/
+    │   │   ├── diffbot_system.cpp    # ros2_control hardware interface (serial comms to Arduino)
+    │   │   └── include/
+    │   │       └── diffdrive_arduino/
+    │   │           ├── diffbot_system.hpp  # Header for hardware interface
+    │   │           └── ... (4 items)
+    │   ├── description/
+    │   │   ├── launch/
+    │   │   │   └── view_robot.launch.py    # View diffbot URDF in RViz
+    │   │   ├── ros2_control/
+    │   │   │   └── diffbot.ros2_control.xacro  # Alternative ros2_control xacro
+    │   │   ├── urdf/
+    │   │   │   ├── diffbot.urdf.xacro           # Simple diffbot URDF
+    │   │   │   ├── diffbot.materials.xacro       # Materials
+    │   │   │   └── diffbot_description.urdf.xacro # Full diffbot description
+    │   │   └── rviz/
+    │   │       └── ... (2 items)
+    │   └── bringup/
+    │       ├── config/
+    │       │   └── diffbot_controllers.yaml  # Alternative controller config
+    │       └── launch/
+    │           └── diffbot.launch.py         # Alternative standalone bringup launch
+    │
+    ├── ldlidar/                   # LD06 LIDAR DRIVER (C++, ament_cmake)
+    │   ├── CMakeLists.txt
+    │   ├── package.xml
+    │   ├── readme.md
+    │   ├── ldlidar.rules              # udev rules for LD06
+    │   ├── .github/                   # GitHub CI config
+    │   ├── include/
+    │   │   ├── cmd_interface_linux.h  # Serial port interface (Linux)
+    │   │   ├── ldlidar_node.h         # LD06 node header
+    │   │   ├── lipkg.h                # LiDAR packet processing
+    │   │   └── tofbh.h               # TOF beam forming
+    │   ├── src/
+    │   │   ├── cmd_interface_linux.cpp # Serial port implementation
+    │   │   ├── ldlidar.cpp             # Entry point
+    │   │   ├── ldlidar_node.cpp        # LD06 node: auto-detect CP2102, publish LaserScan
+    │   │   ├── lipkg.cpp               # Parse LiDAR data packets
+    │   │   └── tofbf.cpp               # TOF beam forming processing
+    │   ├── launch/
+    │   │   └── ldlidar.launch.py       # LD06 launch (configurable port, topic, frame)
+    │   └── rviz/
+    │       └── ldlidar.rviz            # RViz config for LD06
+    │
+    └── serial/                   # SERIAL LIBRARY (C++, ament_cmake) - 3rd party
+        ├── CMakeLists.txt
+        ├── package.xml
+        ├── README.md
+        ├── CHANGELOG.rst
+        ├── changes.txt
+        ├── Makefile
+        ├── serial.sublime-project
+        ├── include/
+        │   └── serial/             # Cross-platform serial port headers
+        ├── src/                    # Serial port implementation
+        ├── doc/                    # Doxygen docs
+        ├── examples/               # Example serial usage
+        ├── tests/                  # Unit tests
+        └── visual_studio/         # Visual Studio project files
+
+================================================================================
+2. FILE FUNCTION INDEX
+================================================================================
+
+--- articubot_one (MAIN PACKAGE) ---
+
+CONFIG FILES:
+  config/my_controllers.yaml          → ros2_control: diff_drive_controller + joint_state_broadcaster
+                                       wheel_separation: 0.188m, wheel_radius: 0.0325m
+                                       publish_rate: 50Hz, base_frame: base_link
+  config/nav2_params.yaml             → FULL Nav2 config (349 lines!)
+                                       AMCL: base_footprint, laser_model: likelihood_field
+                                       Controller: DWB local planner, max_vel: 0.26 m/s
+                                       Costmaps: local(voxel_layer+inflation), global(static+obstacle+inflation)
+                                       Planner: NavfnPlanner (Dijkstra)
+                                       Waypoint follower: stop_on_failure=false, pause=200ms
+                                       Behaviors: spin, backup, drive_on_heading, wait, assisted_teleop
+  config/mapper_params_online_async.yaml → SLAM Toolbox async mode
+                                       base_frame: base_footprint, scan: /scan
+                                       mode: localization, loop_closing: true
+  config/twist_mux.yaml               → Priority: joystick(100) > tracker(20) > navigation(10)
+  config/joystick.yaml                → Joy: device 0, teleop scale 0.5, turbo 1.0
+  config/ball_tracker_params_robot.yaml → HSV for real ball detection
+  config/ball_tracker_params_sim.yaml   → HSV for sim ball detection
+  config/gazebo_params.yaml            → Gazebo sim params
+  config/gaz_ros2_ctl_use_sim.yaml     → use_sim_time flag for Gazebo control
+  config/empty.yaml                    → Placeholder
+  config/main.rviz                     → Main RViz visualization
+  config/map.rviz                      → Map visualization
+  config/drive_bot.rviz                → Drive visualization
+  config/view_bot.rviz                 → Robot model visualization
+
+URDF/XACRO FILES:
+  description/robot.urdf.xacro        → ROOT: includes core, ros2_control/gazebo_control, lidar, camera, face
+  description/robot_core.xacro        → Physical robot: chassis 0.3x0.21x0.1m, wheel_r=0.0325m, wheel_sep=0.188m
+  description/ros2_control.xacro      → Real: diffdrive_arduino plugin (/dev/ttyACM0, 57600 baud, 1500 enc/rev)
+                                       Sim: GazeboSystem plugin
+  description/gazebo_control.xacro    → Alternative: libgazebo_ros_diff_drive.so (when NOT using ros2_control)
+  description/lidar.xacro             → laser_frame at (0.08, 0, 0.1425), Gazebo ray sensor → /scan
+  description/camera.xacro            → camera_link on chassis, Gazebo camera → /camera/image_raw
+  description/depth_camera.xacro      → Depth camera (NOT included currently)
+  description/face.xacro              → Decorative face (eyes + mouth)
+  description/inertial_macros.xacro   → Inertial calculation helpers
+
+LAUNCH FILES:
+  launch/launch_robot.launch.py       → ★ REAL ROBOT: rsp + twist_mux + controller_manager + diff_cont + joint_broad
+  launch/launch_sim.launch.py         → ★ SIMULATION: rsp + joystick + twist_mux + gazebo + spawn + controllers
+  launch/rsp.launch.py                → Robot State Publisher (xacro processing)
+  launch/joystick.launch.py           → Joy node + teleop_twist_joy
+  launch/camera.launch.py             → v4l2_camera (640x480, camera_link_optical)
+  launch/rplidar.launch.py            → RPLiDAR (hardcoded USB path)
+  launch/ball_tracker.launch.py       → Ball tracker (sim/real param switching)
+  launch/online_async_launch.py       → SLAM Toolbox async mapping
+  launch/localization_launch.py       → AMCL + map_server + lifecycle_manager
+  launch/navigation_launch.py         → FULL Nav2 stack (7 lifecycle nodes + lifecycle manager)
+
+--- ball_tracker ---
+
+  ball_tracker/detect_ball.py         → OpenCV HSV filter + SimpleBlobDetector → /detected_ball (Point)
+  ball_tracker/detect_ball_3d.py      → 2D→3D projection using angular size → /detected_ball_3d
+  ball_tracker/follow_ball.py         → Follow ball: angular chase + forward speed → /cmd_vel
+  ball_tracker/process_image.py       → Image processing utilities (HSV threshold, blob detection, tuning window)
+
+--- diffdrive_arduino ---
+
+  hardware/diffbot_system.cpp         → ros2_control SystemInterface
+                                       on_configure: connect serial (/dev/ttyACM0)
+                                       read(): read encoders, compute velocity
+                                       write(): send motor commands (counts/loop)
+                                       Supports PID configuration
+
+--- ldlidar ---
+
+  src/ldlidar_node.cpp                → LD06 LiDAR node
+                                       Auto-detect CP2102 USB-serial
+                                       Publish sensor_msgs/LaserScan on configurable topic
+                                       Default frame: "laser_frame"
+
+--- serial ---
+
+  Cross-platform C++ serial library (wjwwood/serial)
+  Used by diffdrive_arduino for Arduino serial communication
+
+================================================================================
+3. MOST IMPORTANT FILES (Priority Order)
+================================================================================
+
+1. ★★★ articubot_one/launch/launch_robot.launch.py     → Main real robot bringup
+2. ★★★ articubot_one/launch/navigation_launch.py       → Nav2 full stack
+3. ★★★ articubot_one/config/nav2_params.yaml           → Nav2 parameters
+4. ★★★ articubot_one/description/ros2_control.xacro    → Hardware interface definition
+5. ★★★ articubot_one/description/robot.urdf.xacro       → Robot physical description
+6. ★★☆ articubot_one/launch/localization_launch.py      → AMCL localization
+7. ★★☆ articubot_one/config/my_controllers.yaml         → Controller configuration
+8. ★★☆ articubot_one/config/mapper_params_online_async.yaml → SLAM config
+9. ★☆☆ articubot_one/launch/online_async_launch.py      → SLAM launch
+10.★☆☆ my_room_map.yaml + my_room_map.pgm               → Existing map file
+
+================================================================================
+4. CURRENT SYSTEM CAPABILITIES
+================================================================================
+
+✅ Robot runs via teleop (joystick)          → YES (joystick.launch.py, teleop_twist_joy)
+✅ Real wheel control (Arduino)              → YES (diffdrive_arduino hardware plugin, /dev/ttyACM0)
+✅ Odometry (odom)                           → YES (diff_drive_controller publishes /odom + TF odom→base_link)
+✅ TF tree                                   → YES (robot_state_publisher + diff_drive_controller)
+✅ URDF/Xacro                                → YES (complete: base, chassis, wheels, caster, lidar, camera)
+✅ RViz                                      → YES (4 rviz configs: main, map, drive_bot, view_bot)
+✅ Gazebo simulation                         → YES (launch_sim.launch.py, obstacles.world)
+✅ Map exists                                → YES (my_room_map.pgm + my_room_map.yaml at workspace root)
+✅ SLAM Toolbox                              → YES (online_async_launch.py, mapper_params_online_async.yaml)
+✅ AMCL localization                         → YES (localization_launch.py, nav2_params.yaml has AMCL config)
+✅ Nav2 stack                                → YES (navigation_launch.py with full lifecycle nodes)
+✅ Obstacle avoidance (costmaps)             → PARTIAL (nav2_params.yaml has voxel_layer + obstacle_layer configured)
+✅ Waypoint following                        → PARTIAL (nav2_waypoint_follower in navigation_launch.py, but NO mission node)
+✅ Camera ball detection                     → YES (ball_tracker package: detect + follow + 3D)
+✅ LiDAR driver                              → YES (ldlidar for LD06, rplidar.launch.py for RPLiDAR)
+✅ Twist mux                                 → YES (priority: joy > tracker > nav)
+
+❌ Auto docking                              → NO
+❌ Waypoint mission manager                  → NO (no node to send 4 waypoints sequentially)
+❌ Nav2 running on real robot                → UNTESTED (nav2_params.yaml has use_sim_time: True everywhere!)
+❌ Map server loading custom map             → ISSUE (localization_launch.py defaults to turtlebot3_world.yaml, not my_room_map.yaml)
+❌ LiDAR integrated in real launch           → MISSING (launch_robot.launch.py does NOT launch ldlidar or rplidar)
+
+================================================================================
+5. COMPLETENESS ASSESSMENT
+================================================================================
+
+Category                          Status      Completeness
+─────────────────────────────────────────────────────────
+Hardware Interface (Arduino)      ✅ Working   90%
+URDF/Robot Description            ✅ Complete  95%
+Gazebo Simulation                ✅ Working   85%
+Teleop (Joystick)                ✅ Working   90%
+Odometry + TF                     ✅ Working   85%
+Camera + Ball Tracking            ✅ Working   80%
+LiDAR Driver                      ✅ Available 75% (not integrated in main launch)
+SLAM Mapping                      ✅ Available 70% (not integrated in main launch)
+Map (existing)                    ✅ Available 60% (exists but not loaded properly)
+AMCL Localization                 ⚠️ Configured 50% (params exist, use_sim_time wrong)
+Nav2 Navigation                   ⚠️ Configured 45% (params exist, use_sim_time wrong)
+Obstacle Avoidance                ⚠️ In Costmap 40% (costmap layers exist, not tested on real robot)
+Waypoint Navigation               ❌ Missing    5% (waypoint_follower exists but no mission manager)
+Mission Management (A→B→C→D)     ❌ Missing    0%
+Auto Docking                      ❌ Missing    0%
+
+OVERALL SYSTEM COMPLETENESS: ~55%
+  - Strong foundation: hardware, URDF, simulation, teleop, basic Nav2 config
+  - Critical gaps: use_sim_time mismatch, no mission manager, LiDAR not in launch chain
+
+================================================================================
+6. WHAT NEEDS TO CHANGE FOR WAYPOINT NAVIGATION
+================================================================================
+
+--- FIX 1: nav2_params.yaml use_sim_time ---
+  PROBLEM: All Nav2 params have "use_sim_time: True"
+  FIX: Change to "use_sim_time: False" for real robot
+  FILE: articubot_one/config/nav2_params.yaml
+  LINES: Multiple (amcl, bt_navigator, controller_server, costmaps, etc.)
+
+--- FIX 2: localization_launch.py map path ---
+  PROBLEM: Default map path is "turtlebot3_world.yaml" (doesn't exist)
+  FIX: Change default to point to my_room_map.yaml
+  FILE: articubot_one/launch/localization_launch.py
+  LINE: 67
+
+--- FIX 3: launch_robot.launch.py missing LiDAR ---
+  PROBLEM: Real robot launch doesn't start LiDAR node
+  FIX: Add IncludeLaunchDescription for ldlidar or rplidar
+  FILE: articubot_one/launch/launch_robot.launch.py
+
+--- FIX 4: launch_robot.launch.py missing navigation ---
+  PROBLEM: Real robot launch doesn't include Nav2 or localization
+  FIX: Add navigation + localization launch includes
+  FILE: articubot_one/launch/launch_robot.launch.py
+
+--- FIX 5: Create waypoint mission manager ---
+  PROBLEM: No node sends waypoints to Nav2 waypoint_follower sequentially
+  FIX: Create new package with mission manager node
+  SEE: Section 7 below
+
+================================================================================
+7. WHAT NEEDS TO CHANGE FOR OBSTACLE AVOIDANCE
+================================================================================
+
+The Nav2 costmap layers are ALREADY configured for obstacle avoidance:
+
+LOCAL COSTMAP (nav2_params.yaml):
+  - voxel_layer: reads /scan (LaserScan), marking + clearing, max_range 2.5m
+  - inflation_layer: cost_scaling 3.0, radius 0.55m
+
+GLOBAL COSTMAP (nav2_params.yaml):
+  - obstacle_layer: reads /scan (LaserScan), marking + clearing, max_range 2.5m
+  - static_layer: loads map
+  - inflation_layer: cost_scaling 3.0, radius 0.55m
+
+BEHAVIOR SERVER:
+  - spin, backup, drive_on_heading, wait, assisted_teleop
+  → These are recovery behaviors when robot gets stuck
+
+DWBC CONTROLLER:
+  - Critics: RotateToGoal, Oscillation, BaseObstacle, GoalAlign, PathAlign, PathDist, GoalDist
+  - BaseObstacle.scale: 0.02 (LOW - should increase for better avoidance)
+  → BaseObstacle.scale should be increased to ~1.0 for real-world obstacle avoidance
+
+PLANNER:
+  - NavfnPlanner (Dijkstra) - works but Nav2 also supports Smac2D/SmacHybrid-A* for better planning
+
+TO IMPROVE OBSTACLE AVOIDANCE:
+  1. Increase BaseObstacle.scale in nav2_params.yaml from 0.02 to 1.0
+  2. Ensure /scan topic is publishing (LiDAR must be running)
+  3. Test with real robot - costmap resolution and ranges may need tuning
+  4. Consider adding range_sensor_layer for better LiDAR integration
+
+================================================================================
+8. REAL ROBOT LAUNCH SEQUENCE
+================================================================================
+
+To run the full system on real robot, the launch order should be:
+
+Terminal 1: Robot hardware + sensors
+  ros2 launch articubot_one launch_robot.launch.py
+
+Terminal 2: LiDAR (if not integrated)
+  ros2 launch ldlidar ldlidar.launch.py
+  OR
+  ros2 launch articubot_one rplidar.launch.py
+
+Terminal 3: SLAM (for mapping first time)
+  ros2 launch articubot_one online_async_launch.py
+
+Terminal 4: Save map after mapping
+  ros2 run nav2_map_server map_saver_cli -f my_room_map
+
+--- After map exists ---
+
+Terminal 3: Localization (instead of SLAM)
+  ros2 launch articubot_one localization_launch.py map:=<path>/my_room_map.yaml
+
+Terminal 4: Navigation
+  ros2 launch articubot_one navigation_launch.py use_sim_time:=false
+
+Terminal 5: Waypoint mission (NEW)
+  ros2 launch robot_mission mission.launch.py
+
+================================================================================
+9. DEPENDENCIES
+================================================================================
+
+CURRENT PACKAGES IN WORKSPACE:
+  - articubot_one (ament_cmake) → main robot bringup
+  - ball_tracker (ament_python) → camera ball detection
+  - diffdrive_arduino (ament_cmake) → ros2_control hardware plugin
+  - ldlidar (ament_cmake) → LD06 LiDAR driver
+  - serial (ament_cmake) → cross-platform serial library (3rd party: wjwwood/serial)
+
+EXTERNAL ROS2 DEPENDENCIES (must be installed on system):
+  - ros2_control (controller_manager, hardware_interface)
+  - ros2_controllers (diff_drive_controller, joint_state_broadcaster)
+  - nav2_stack (nav2_controller, nav2_planner, nav2_behaviors, nav2_bt_navigator,
+                nav2_waypoint_follower, nav2_velocity_smoother, nav2_lifecycle_manager,
+                nav2_amcl, nav2_map_server, nav2_costmap_2d, nav2_smoother)
+  - nav2_common (RewrittenYaml, HasNodeParams)
+  - slam_toolbox
+  - gazebo_ros (gazebo_ros2_control)
+  - twist_mux
+  - joy + teleop_twist_joy
+  - v4l2_camera
+  - rviz2
+  - robot_state_publisher
+  - xacro
+  - cv_bridge + OpenCV
+  - pluginlib
+  - rclcpp / rclpy
+  - sensor_msgs, geometry_msgs, std_msgs, nav_msgs
+  - tf2_ros
+
+3RD PARTY CLONED PACKAGES:
+  - serial → https://github.com/wjwwood/serial (MIT license, v1.2.1)
+  - ldlidar → LD06 driver (likely from ldlidar_ros repository)
+  - diffdrive_arduino → from ros2_control demos (Stogl Robotics)
+  - ball_tracker → from Josh Newans (articulated robotics)
+  - articubot_one → from Josh Newans tutorial series
+
+================================================================================
+10. ROADMAP: FROM CURRENT STATE → WAYPOINT NAVIGATION WITH OBSTACLE AVOIDANCE
+================================================================================
+
+PHASE 1: Fix existing system for real robot (1-2 days)
+  □ Fix nav2_params.yaml: use_sim_time: False for all nodes
+  □ Fix localization_launch.py: default map path → my_room_map.yaml
+  □ Integrate LiDAR into launch_robot.launch.py
+  □ Create unified real robot launch that includes: hardware + LiDAR + localization + Nav2
+  □ Test: teleop → verify /odom, /scan, TF tree
+  □ Test: SLAM mapping → save map
+  □ Test: AMCL localization → verify pose on map
+  □ Test: Nav2 single goal → verify path planning + obstacle avoidance
+
+PHASE 2: Create mission manager package (2-3 days)
+  □ Create robot_mission package (ament_python)
+  □ Write waypoint_sender node (Python) - sends 4 waypoints to Nav2
+  □ Write mission_state_monitor node (Python) - tracks arrival at each waypoint
+  □ Write obstacle_handler node (Python) - monitors Nav2 status, triggers recovery
+  □ Create mission.launch.py - launches all mission nodes
+  □ Create mission_params.yaml - waypoint coordinates, timeouts, etc.
+  □ Test: single waypoint navigation
+  □ Test: sequential 4-waypoint mission
+  □ Test: obstacle avoidance during mission
+
+PHASE 3: Integration and testing (1-2 days)
+  □ Create full_system.launch.py (hardware + LiDAR + localization + Nav2 + mission)
+  □ Tune Nav2 params for real robot (velocities, costmap ranges, goal tolerances)
+  □ Tune BaseObstacle.scale for reliable avoidance
+  □ Test full mission A→B→C→D on real robot
+  □ Add error handling (timeout, stuck recovery, mission abort)
+
+PHASE 4: Polish and robustness (1-2 days)
+  □ Add LED/buzzer feedback for mission state
+  □ Add RViz visualization for waypoints and mission progress
+  □ Add parameter reconfiguration without restart
+  □ Document launch procedures
+  □ Create README with setup instructions
+
+================================================================================
+END OF ANALYSIS
+================================================================================

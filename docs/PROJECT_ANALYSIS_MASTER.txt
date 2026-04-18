@@ -1,0 +1,193 @@
+================================================================================
+PROJECT_ANALYSIS_MASTER.txt — ROS2 workspace d:\NCKH\ROS2\Ros2
+Ngày phân tích: 2026-04-19
+Nguồn: chỉ từ file có trong repo (không suy diễn phần cứng thật đã chạy).
+================================================================================
+
+1) CÂY THƯ MỤC (MỨC WORKSPACE — TÓM TẮT CÓ CẤU TRÚC)
+--------------------------------------------------------------------------------
+ROS2\Ros2\
+  my_room_map.yaml, my_room_map.pgm     (bản đồ gốc tại root workspace)
+  dev_ws_project_analysis.txt           (báo cáo phân tích cũ — tham khảo)
+  src\
+    articubot_one\      — gói CMake chính: config, description, launch, worlds, maps (mới)
+    ball_tracker\       — Python: OpenCV theo bóng
+    diffdrive_arduino\  — ros2_control + serial tới Arduino
+    ldlidar\            — driver LD06 → LaserScan
+    robot_mission_system\ — Python mới: waypoint + mission + CLI
+    serial\             — thư viện serial C++ (wjwwood), phụ thuộc diffdrive
+
+chưa thấy: package nav2_* trong workspace (Nav2 cài hệ thống qua apt/rosdep).
+
+2) PACKAGE ROS2 TRONG WORKSPACE
+--------------------------------------------------------------------------------
+- articubot_one (ament_cmake)
+- ball_tracker (ament_python)
+- diffdrive_arduino (ament_cmake)
+- ldlidar (ament_cmake)
+- robot_mission_system (ament_python) — THÊM MỚI
+- serial (ament_cmake)
+
+3) PACKAGE LÕI HỆ THỐNG
+--------------------------------------------------------------------------------
+- articubot_one: URDF/xacro, launch mô phỏng/robot thật, cấu hình Nav2/SLAM/twist_mux.
+- diffdrive_arduino + serial: giao tiếp phần cứng diff-drive thật.
+- robot_mission_system: lớp nhiệm vụ waypoint (sau nâng cấp).
+
+4) NODE “CHÍNH” (THEO LAUNCH HIỆN CÓ)
+--------------------------------------------------------------------------------
+Robot thật cơ bản (launch_robot.launch.py):
+  robot_state_publisher, twist_mux, ros2_control_node, spawner diff_cont + joint_broad.
+Mô phỏng (launch_sim.launch.py): thêm Gazebo, spawn, joystick (theo cấu hình gốc).
+Nav2 (navigation_launch.py): controller_server, smoother_server, planner_server,
+  behavior_server, bt_navigator, waypoint_follower, velocity_smoother,
+  lifecycle_manager_navigation.
+Định vị (localization_launch.py): map_server, amcl, lifecycle_manager_localization.
+Mission (mission_stack.launch.py): teach_waypoint, mission_manager, (tuỳ chọn) system_status.
+
+5) LAUNCH FILE GỐC / ĐIỂM VÀO
+--------------------------------------------------------------------------------
+- Robot thật tối thiểu: articubot_one/launch/launch_robot.launch.py
+- Sim: articubot_one/launch/launch_sim.launch.py
+- Định vị: articubot_one/launch/localization_launch.py
+- Nav2 đầy đủ: articubot_one/launch/navigation_launch.py
+- SLAM: articubot_one/launch/online_async_launch.py
+- Gợi ý tích hợp thật (MỚI): articubot_one/launch/real_autonomy_stack.launch.py
+- Mission: robot_mission_system/launch/mission_stack.launch.py
+
+6) YAML QUAN TRỌNG
+--------------------------------------------------------------------------------
+- articubot_one/config/nav2_params.yaml — AMCL, costmap, DWB, BT navigator, v.v.
+- articubot_one/config/my_controllers.yaml — diff_drive + joint_state_broadcaster
+- articubot_one/config/twist_mux.yaml — ưu tiên joy/tracker/nav/precision
+- articubot_one/config/mapper_params_online_async.yaml — slam_toolbox
+- robot_mission_system/config/mission_params.yaml — đường dẫn lưu waypoint, timeout
+
+7) URDF/XACRO
+--------------------------------------------------------------------------------
+- articubot_one/description/robot.urdf.xacro (gốc)
+- robot_core.xacro, ros2_control.xacro, lidar.xacro (laser_frame), camera.xacro, gazebo_control.xacro, v.v.
+- diffdrive_arduino/description: mô hình diffbot độc lập (không phải robot đang dùng trong articubot_one).
+
+8) DRIVER PHẦN CỨNG
+--------------------------------------------------------------------------------
+- diffdrive_arduino/hardware/diffbot_system.cpp — đọc encoder / ghi lệnh qua serial (mặc định ttyACM0 trong xacro).
+- ldlidar — LD06 qua USB serial.
+
+9) TÍCH HỢP LiDAR
+--------------------------------------------------------------------------------
+- Có: ldlidar (launch ldlidar.launch.py), topic mặc định scan, frame mặc định laser_frame (khớp lidar.xacro).
+- articubot_one/launch/rplidar.launch.py — RPLidar (đường serial hardcode trong file — cần chỉnh trên máy thật).
+
+10) CAMERA
+--------------------------------------------------------------------------------
+- articubot_one/launch/camera.launch.py — v4l2_camera.
+- ball_tracker — xử lý ảnh OpenCV (HSV blob).
+
+11) ros2_control / diff drive
+--------------------------------------------------------------------------------
+- articubot_one/description/ros2_control.xacro — plugin diffdrive_arduino (thật) / GazeboSystem (sim).
+- Controller: diff_drive_controller (my_controllers.yaml).
+
+12) SERIAL / MCU BRIDGE
+--------------------------------------------------------------------------------
+- Thư viện serial (C++), diffdrive_arduino dùng cho Arduino.
+
+13) Nav2
+--------------------------------------------------------------------------------
+- Có launch + nav2_params.yaml trong repo.
+- chưa thấy log/ chứng cứ chạy Nav2 trên Pi trong repo.
+
+14) AMCL / SLAM
+--------------------------------------------------------------------------------
+- AMCL + map_server: localization_launch.py + mục amcl trong nav2_params.yaml.
+- SLAM: online_async_launch.py + mapper_params_online_async.yaml.
+
+15) ĐỒ THỊ TOPIC / TF (KHÔNG CÓ BAG — LIỆT KÊ THEO CODE)
+--------------------------------------------------------------------------------
+Kỳ vọng khi stack đầy đủ:
+  /scan (LaserScan), /odom (Odometry), /cmd_vel (twist_mux output → diff_cont),
+  /tf, /tf_static, /map (nav_msgs/OccupancyGrid), /amcl_pose,
+  Nav2 internals: local_costmap/costmap_raw, global_costmap/costmap_raw, v.v.
+Action: navigate_to_pose (bt_navigator).
+Mission (mới): /robot_mission/command (JSON), /robot_mission/snapshot, /robot_mission/save_waypoint,
+  /cmd_vel_precision (precision, qua twist_mux).
+
+16) LOGGING HIỆN TẠI
+--------------------------------------------------------------------------------
+- RCUTILS qua stdout (launch dùng output='screen' một số node).
+- robot_mission_system: get_logger() + snapshot JSON định kỳ.
+- chưa thấy: rosbag2 mặc định, centralized logging.
+
+17) CODE SMELL / TECHNICAL DEBT
+--------------------------------------------------------------------------------
+- articubot_one/package.xml: mô tả TODO, license TODO.
+- Hai mô hình robot (articubot_one vs diffdrive_arduino/description) dễ gây nhầm.
+- serial + ldlidar vendored — cần theo dõi bản quyền/cập nhật.
+- ball_tracker / sim launch: nhiều demo — không lỗi nhưng tăng diện tích bảo trì.
+- rplidar.launch.py: đường thiết bị cứng — rủi ro khi đổi USB.
+
+18) FILE THỪA / NGOÀI PHẠM VI
+--------------------------------------------------------------------------------
+- serial/tests, visual_studio — phụ trợ thư viện.
+- dev_ws_project_analysis.txt — tài liệu, không phải code chạy.
+
+================================================================================
+KẾT LUẬN NGẮN
+--------------------------------------------------------------------------------
+Nền tảng: diff-drive + URDF + Nav2 config + SLAM toolbox + driver LiDAR + ball tracker.
+Khoảng trống đã được lấp (code): mission waypoint tuần tự + teach AMCL + launch tích hợp gợi ý.
+Việc còn lại trên robot thật: hiệu chỉnh map, AMCL pose ban đầu, chỉnh Nav2 theo sàn/vật cản, test tải Pi.
+
+================================================================================
+PHỤ LỤC A — ĐÁNH GIÁ MỨC ĐỘ (0–10, ước lượng từ code; chưa có log chạy thật)
+--------------------------------------------------------------------------------
+Hardware interface (Arduino/serial):     8/10
+Motion control (ros2_control + mux):     7/10
+Localization (AMCL + map):             6/10 (cấu hình có; map default đã sửa)
+Mapping (SLAM toolbox):                6/10 (launch riêng, chưa gộp bringup)
+Navigation (Nav2):                     6/10 (đầy đủ launch; cần tune thực địa)
+Safety:                                4/10 (mux + recovery; thiếu E-stop/FSM chuẩn)
+Mission control:                       7/10 (sau thêm robot_mission_system)
+Maintainability:                       5/10 (TODO license, nhiều nguồn tutorial)
+Scalability:                           5/10 (YAML waypoint; chưa fleet)
+Readability:                           6/10
+
+Ước lượng sẵn sàng chạy thực tế (tích hợp + test hiện trường): ~55–65%
+(chưa thấy chứng cứ test end-to-end trong repo).
+
+PHỤ LỤC B — KIỂM TRA NỀN TẢNG WAYPOINT / Nav2 (theo code, không phải trace runtime)
+--------------------------------------------------------------------------------
+Có trong thiết kế launch + params:
+  /scan          — có (LD06 / Gazebo lidar plugin / RPLidar launch)
+  /cmd_vel       — có (velocity_smoother → twist_mux chain)
+  /odom          — có (diff_drive_controller)
+  /tf, /tf_static — có (robot_state_publisher + TF từ controller)
+  /amcl_pose     — có khi AMCL chạy
+  map_server     — có (localization_launch)
+  planner_server, controller_server, bt_navigator, recoveries (behavior_server),
+  lifecycle_manager — có (navigation_launch)
+
+Thiếu / chưa tích hợp sẵn trong một launch duy nhất trước đây:
+  — đã bổ sung real_autonomy_stack.launch.py (gợi ý); vẫn cần xác minh trên Pi.
+
+Ưu tiên bổ sung nếu thiếu trên máy thật:
+  CAO: LiDAR publish /scan đúng frame; map + AMCL initial pose; Nav2 lifecycle active.
+  TB:  Tune costmap + DWB; mission timeout/retry policy theo sàn.
+  THẤP: SQLite waypoint; HMI.
+
+PHỤ LỤC C — BẢNG FILE (GIAI ĐOẠN 11)
+--------------------------------------------------------------------------------
+STT | File | New/Edit | Priority | Purpose | Required | Risk
+----|------|----------|----------|---------|----------|------
+1 | articubot_one/CMakeLists.txt | Edit | High | Install maps | Yes | Low
+2 | articubot_one/launch/localization_launch.py | Edit | High | Default map đúng | Yes | Med
+3 | articubot_one/config/nav2_params.yaml | Edit | High | Sim=false, DWB obstacle | Yes | Med (sim)
+4 | articubot_one/config/twist_mux.yaml | Edit | Med | cmd_vel_precision | No | Low
+5 | articubot_one/launch/real_autonomy_stack.launch.py | New | High | Bringup gợi ý | No | Med
+6 | articubot_one/package.xml | Edit | Low | exec_depend | No | Low
+7 | articubot_one/maps/* | New | High | Map trong share | Yes | Med
+8 | robot_mission_system/* | New | High | Mission/teach | Yes | Med
+9 | docs/*.txt | New | Med | Bàn giao | No | Low
+
+================================================================================

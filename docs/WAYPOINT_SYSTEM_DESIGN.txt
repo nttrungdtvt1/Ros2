@@ -1,0 +1,64 @@
+================================================================================
+WAYPOINT_SYSTEM_DESIGN.txt — Kiến trúc hệ thống waypoint + mission (sau nâng cấp)
+================================================================================
+
+A) TEACH MODE
+--------------------------------------------------------------------------------
+- Node: teach_waypoint
+- Đầu vào: topic /robot_mission/save_waypoint (std_msgs/String) = tên waypoint.
+- Nguồn pose: /amcl_pose (geometry_msgs/PoseWithCovarianceStamped), frame map.
+- Hành vi: ghi đè waypoint trùng tên (upsert).
+
+B) STORAGE LAYER
+--------------------------------------------------------------------------------
+- Module: waypoint_repository.py
+- Định dạng: YAML (version field + list waypoints). Đường mặc định ~/.robot_mission/waypoints.yaml
+- Sao lưu: file .bak khi ghi (atomic replace).
+- SQLite: chưa dùng — YAML đủ cho N waypoint vừa/phải, dễ diff/git.
+
+C) MISSION ENGINE
+--------------------------------------------------------------------------------
+- Node: mission_manager
+- Lệnh: /robot_mission/command JSON:
+    {"cmd":"start","waypoints":["A","B","C"]}
+    {"cmd":"pause"} | {"cmd":"resume"} | {"cmd":"cancel"} | {"cmd":"reload_repo"}
+- Hàng đợi: danh sách tên; lặp route: tham số repeat_route (mặc định false).
+- Trạng thái: IDLE | RUNNING | PAUSED | FAILED | PRECISION
+
+D) NAVIGATION LAYER
+--------------------------------------------------------------------------------
+- Module: nav_executor.py — Action client NavigateToPose (mặc định navigate_to_pose).
+- Timeout: goal_timeout_sec; hủy goal khi timeout và thử lại cùng điểm (không nhảy điểm).
+- Kết quả: theo action_msgs/GoalStatus; streak lỗi → FAILED sau max_consecutive_failures.
+
+E) PRECISION DOCKING / CĂN CHỈNH CUỐI
+--------------------------------------------------------------------------------
+- Module: precision_arrival.py
+- Sau khi Nav2 SUCCEEDED: phase PRECISION căn yaw bằng /cmd_vel_precision (twist_mux priority 15 > nav 10).
+- Timeout riêng: precision_phase_timeout_sec.
+
+F) OBSTACLE INTELLIGENCE (MỨC TỐI THIỂU)
+--------------------------------------------------------------------------------
+- Module: obstacle_supervisor.py: scan stale, “front blocked” đơn giản từ LaserScan.
+- Mission: require_scan_before_goal — không gửi goal nếu scan không fresh; tự thử lại khi scan OK.
+- Replan: do Nav2 BT + costmap; mission không thay thế local planner.
+- Nhiều lần fail: FAILED để operator can thiệp.
+
+G) OPERATOR CONTROL
+--------------------------------------------------------------------------------
+- operator_cli: save | start | pause | resume | cancel | reload | list
+- system_status: nghe snapshot (tuỳ chọn log).
+
+--------------------------------------------------------------------------------
+SƠ ĐỒ LUỒNG (TEXT)
+--------------------------------------------------------------------------------
+Teleop (cmd_vel_joy) / Nav (cmd_vel từ velocity_smoother)
+        ↓
+   twist_mux → diff_cont/cmd_vel_unstamped
+        ↑
+Teach: AMCL pose → save_waypoint → WaypointRepository (YAML)
+Mission: command JSON → MissionManager → NavExecutor → bt_navigator (NavigateToPose)
+        → (optional) PrecisionArrival → cmd_vel_precision → twist_mux
+ObstacleSupervisor đọc /scan → snapshot JSON / chặn gửi goal khi scan hỏng
+
+================================================================================

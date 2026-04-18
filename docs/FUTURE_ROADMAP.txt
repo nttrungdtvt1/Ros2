@@ -1,0 +1,38 @@
+================================================================================
+FUTURE_ROADMAP.txt — 6 tháng tới (đề xuất AGV thương mại)
+================================================================================
+
+Tháng 1–2: Cứng hóa thực địa
+--------------------------------------------------------------------------------
+- Rosbag tiêu chuẩn cho mỗi test; script kiểm tra regression (/scan, /odom, TF).
+- Watchdog odom + scan + Nav2 lifecycle; LED/buzzer trạng thái mission.
+- Tham số Nav2 theo từng “profile” (nhà kho / hành lang hẹp).
+
+Tháng 2–3: Mission nâng cao
+--------------------------------------------------------------------------------
+- Persist trạng thái mission (SQLite hoặc file checkpoint) + resume sau reboot.
+- Giao diện Web hoặc HMI nhẹ trên Pi (FastAPI + websocket).
+- Hàng đợi ưu tiên (ưu tiên nhiệm vụ khẩn).
+
+Tháng 3–4: An toàn chức năng
+--------------------------------------------------------------------------------
+- Khối an toàn phần cứng (e-stop) tách ROS.
+- Giám sát va chạm / IMU / motor current nếu có.
+- Giới hạn vùng hoạt động (geofence) trên map.
+
+Tháng 4–5: Định vị & bản đồ
+--------------------------------------------------------------------------------
+- Pipeline map lifecycle: phiên bản map, ngày hiệu lực, rollback.
+- Thử nghiệm SLAM toolbox vs Cartographer (nếu cần) trên dữ liệu thật.
+
+Tháng 5–6: Vận hành đội xe
+--------------------------------------------------------------------------------
+- Fleet ID, đồng bộ đồng hồ, logging tập trung.
+- OTA cập nhật parameter an toàn (canary trên một robot).
+
+================================================================================
+GHI CHÚ
+--------------------------------------------------------------------------------
+- Mọi mục phụ thuộc ngân sách cảm biến và yêu cầu chuẩn an toàn địa phương.
+
+================================================================================

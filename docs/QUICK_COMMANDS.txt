@@ -1,0 +1,39 @@
+================================================================================
+QUICK_COMMANDS.txt
+================================================================================
+
+# Build + source
+cd <workspace>/ROS2/Ros2 && colcon build --symlink-install && source install/setup.bash
+
+# Stack gợi ý (Pi): robot + LD06 + AMCL + Nav2 + mission
+ros2 launch articubot_one real_autonomy_stack.launch.py
+
+# Chỉ mission (khi Nav2 + AMCL đã chạy)
+ros2 launch robot_mission_system mission_stack.launch.py
+
+# Teach điểm (tên tùy chọn)
+ros2 run robot_mission_system operator_cli save A
+
+# Mission A→B→C
+ros2 run robot_mission_system operator_cli start A B C
+
+ros2 run robot_mission_system operator_cli pause
+ros2 run robot_mission_system operator_cli resume
+ros2 run robot_mission_system operator_cli cancel
+
+# Liệt kê waypoint trong file
+ros2 run robot_mission_system operator_cli list
+
+# Snapshot trạng thái (một lần)
+ros2 run robot_mission_system operator_cli publish-snapshot-wait
+
+# Theo dõi snapshot
+ros2 topic echo /robot_mission/snapshot
+
+# Kiểm tra action Nav2
+ros2 action info /navigate_to_pose
+
+# Lưu map mới (khi chạy SLAM — tách terminal)
+ros2 run nav2_map_server map_saver_cli -f my_room_map
+
+================================================================================

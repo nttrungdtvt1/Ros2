@@ -1,0 +1,67 @@
+================================================================================
+DEBUG_PLAYBOOK.txt — Sự cố thường gặp
+================================================================================
+
+1) Robot không di chuyển / không nhận lệnh Nav
+--------------------------------------------------------------------------------
+- Kiểm tra: ros2 topic echo /cmd_vel — có twist không?
+- twist_mux output: /cmd_vel_out → diff_cont (theo launch_robot). Xác nhận diff_cont đang active.
+- Nav2: ros2 lifecycle get /controller_server — phải active.
+
+2) /scan không có hoặc sai frame
+--------------------------------------------------------------------------------
+- ros2 topic hz /scan
+- So sánh frame_id với URDF (laser_frame). LD06: tham số lidar_frame trong ldlidar.launch.py.
+
+3) AMCL không bám map
+--------------------------------------------------------------------------------
+- Đặt 2D Pose Estimate trong RViz.
+- Kiểm tra map_server đã load đúng YAML/PGM (đường dẫn trong localization_launch).
+
+4) Mission FAILED ngay
+--------------------------------------------------------------------------------
+- ros2 topic echo /robot_mission/snapshot — fail_streak, obstacle.scan_ok.
+- operator_cli list — waypoint có tồn tại không?
+- reload_repo sau khi sửa file tay: operator_cli reload
+
+5) NavigateToPose bị timeout
+--------------------------------------------------------------------------------
+- Tăng goal_timeout_sec trong mission_params.yaml.
+- Kiểm tra vật cản, inflation, goal nằm trong vùng free.
+
+6) Mất scan / odom (PHASE 8 — hành vi đề xuất)
+--------------------------------------------------------------------------------
+- Hiện tại: obstacle_supervisor đánh dấu scan stale; mission chặn gửi goal mới.
+- Odom: chưa có node giám sát riêng trong repo — nên thêm watchdog /diagnostics (roadmap).
+
+7) Goal timeout / kẹt
+--------------------------------------------------------------------------------
+- Xem Nav2 recovery (BT đã bật spin/back/wait).
+- Kiểm tra progress_checker movement_time_allowance trong nav2_params.yaml.
+
+8) CPU Pi quá tải
+--------------------------------------------------------------------------------
+- Giảm controller_frequency, tăng costmap resolution (cẩn thận độ mịn), giảm voxel publish rate.
+- Tắt RViz trên Pi, chạy RViz trên PC qua ROS_DOMAIN_ID + network.
+
+9) Node mission chết giữa chừng
+--------------------------------------------------------------------------------
+- Dùng ros2 launch với respawn (navigation_launch có use_respawn) — mission_manager chưa bật respawn mặc định; có thể bọc trong launch với respawn=True (TODO).
+
+10) Reboot khôi phục trạng thái
+--------------------------------------------------------------------------------
+- Waypoint lưu file YAML trên disk — giữ được sau reboot.
+- Trạng thái mission RUNNING không được persist — sau reboot cần start lại mission.
+
+================================================================================
+GỢI Ý TUNING Nav2 (tóm tắt — cần đo thực địa)
+--------------------------------------------------------------------------------
+- AMCL: max_particles / min_particles cân bằng CPU vs độ ổn định; update_min_d nếu robot chậm.
+- local_costmap: width/height, resolution — vùng nhỏ hơn giảm tải; inflation_radius — khoảng cách “né” tường.
+- global_costmap: đồng bộ với map tĩnh; obstacle_layer max_obstacle_height nếu có nhiễu.
+- controller_frequency: 20 Hz mặc định; Pi yếu có thể 10–15 Hz (test kỹ).
+- goal tolerance (general_goal_checker): xy/yaw nhỏ hơn → chính xác hơn nhưng dễ “quằn” tại goal.
+- velocity limits: khớp an toàn cơ khí và encoder.
+- DWB critics: BaseObstacle.scale đã tăng 1.0 — nếu rung, giảm dần và bù bằng inflation.
+
+================================================================================

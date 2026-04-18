@@ -1,0 +1,54 @@
+================================================================================
+MODIFIED_FILES_DETAILED.txt — File cũ đã sửa (bàn giao chi tiết)
+================================================================================
+
+1) Đường dẫn: src/articubot_one/CMakeLists.txt
+   Loại: CMake
+   Section: install(DIRECTORY …)
+   Code cũ: không install thư mục maps → map_server không tìm thấy file trong share.
+   Code mới: thêm "maps" vào install.
+   Rủi ro: thấp.
+   Rollback: bỏ "maps" khỏi danh sách DIRECTORY.
+   Kết quả: my_room_map.yaml/pgm được cài vào share/articubot_one/maps.
+
+2) Đường dẫn: src/articubot_one/launch/localization_launch.py
+   Loại: Python launch
+   Section: DeclareLaunchArgument('map', …)
+   Code cũ: default turtlebot3_world.yaml trong maps/ (không tồn tại trong repo).
+   Code mới: default my_room_map.yaml trong maps/.
+   Rủi ro: trung bình — nếu chưa copy map vào maps/ thì vẫn lỗi.
+   Rollback: đổi default_value về đường map cũ hoặc truyền map:= khi launch.
+   Kết quả: localization có default khớp bản đồ có trong package.
+
+3) Đường dẫn: src/articubot_one/config/nav2_params.yaml
+   Loại: YAML Nav2
+   Section: toàn bộ use_sim_time; DWB BaseObstacle.scale
+   Code cũ: use_sim_time: True phù hợp sim; BaseObstacle.scale 0.02 (né vật cản yếu).
+   Code mới: use_sim_time: False mặc định cho robot thật; BaseObstacle.scale: 1.0.
+   Rủi ro: cao với mô phỏng — chạy Gazebo cần truyền use_sim_time:=true qua launch (RewrittenYaml).
+   Rollback: revert block DWB và cờ use_sim_time.
+   Kết quả: mặc định phù hợp Pi thật; né vật cản mạnh hơn (cần test thực địa).
+
+4) Đường dẫn: src/articubot_one/config/twist_mux.yaml
+   Loại: YAML
+   Section: topics
+   Code cũ: 3 nguồn (navigation, tracker, joystick).
+   Code mới: thêm precision (cmd_vel_precision, priority 15).
+   Rủi ro: thấp — nếu không publish precision thì không ảnh hưởng.
+   Rollback: xóa khối precision.
+   Kết quả: mission có kênh riêng căn yaw cuối không đè joystick.
+
+5) Đường dẫn: src/articubot_one/package.xml
+   Loại: manifest
+   Section: dependencies
+   Code cũ: chỉ buildtool + test.
+   Code mới: exec_depend ldlidar, robot_mission_system (cho rosdep/overlay).
+   Rủi ro: thấp.
+   Rollback: xóa exec_depend.
+   Kết quả: khai báo rõ phụ thuộc runtime cho launch tích hợp.
+
+6) Đường dẫn: src/articubot_one/maps/* (mới copy từ root workspace)
+   Loại: map assets
+   Ghi chú: CMake install phải rebuild để copy vào install/.
+
+================================================================================

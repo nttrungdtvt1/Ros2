@@ -1,0 +1,24 @@
+# Default parameters for robot_mission_system nodes (override in launch).
+teach_waypoint:
+  ros__parameters:
+    storage_path: "~/.robot_mission/waypoints.yaml"
+    amcl_pose_topic: "/amcl_pose"
+
+mission_manager:
+  ros__parameters:
+    storage_path: "~/.robot_mission/waypoints.yaml"
+    command_topic: "/robot_mission/command"
+    snapshot_topic: "/robot_mission/snapshot"
+    map_frame: "map"
+    goal_timeout_sec: 180.0
+    navigate_action: "navigate_to_pose"
+    repeat_route: false
+    enable_precision_yaw: true
+    max_consecutive_failures: 3
+    require_scan_before_goal: true
+    precision_phase_timeout_sec: 20.0
+
+system_status:
+  ros__parameters:
+    snapshot_topic: "/robot_mission/snapshot"
+    log_each_message: false

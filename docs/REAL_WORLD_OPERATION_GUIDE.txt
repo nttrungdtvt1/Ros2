@@ -1,0 +1,75 @@
+================================================================================
+REAL_WORLD_OPERATION_GUIDE.txt — Vận hành ngoài thực tế (Raspberry Pi + ROS2)
+================================================================================
+
+ĐIỀU KIỆN TIÊN QUYẾT
+--------------------------------------------------------------------------------
+- Đã cài ROS2 distro tươ thích (ví dụ Humble) + Nav2 + slam_toolbox + twist_mux + ros2_control.
+- Arduino + diffdrive_arduino: cổng serial đúng (xem ros2_control.xacro), quyền dialout/udev.
+- LD06: cổng serial đúng; frame laser_frame khớp URDF (ldlidar.launch.py đã truyền lidar_frame).
+- Map đã cài cùng articubot_one/share/.../maps/my_room_map.yaml (+ pgm cùng thư mục).
+
+1) BUILD WORKSPACE
+--------------------------------------------------------------------------------
+  cd ~/ros2_ws   # hoặc đường dẫn tương đương tới Ros2
+  colcon build --symlink-install
+  source install/setup.bash
+
+2) SOURCE WORKSPACE
+--------------------------------------------------------------------------------
+  source install/setup.bash
+
+3) BRINGUP ROBOT (chỉ phần cứng + mux)
+--------------------------------------------------------------------------------
+  ros2 launch articubot_one launch_robot.launch.py
+
+4) START LOCALIZATION + SENSORS + NAV (một terminal — khuyến nghị sau khi test từng phần)
+--------------------------------------------------------------------------------
+  ros2 launch articubot_one real_autonomy_stack.launch.py use_ldlidar:=true use_mission:=true
+
+5) SET INITIAL POSE (bắt buộc cho AMCL nếu chưa có tự khởi tạo)
+--------------------------------------------------------------------------------
+  Dùng RViz2 “2D Pose Estimate” hoặc publisher pose ban đầu — chưa thấy node tự set trong repo.
+
+6) TEACH ĐIỂM A
+--------------------------------------------------------------------------------
+  Lái robot (joystick/teleop) tới vị trí mong muốn, chờ AMCL ổn định.
+  ros2 topic pub --once /robot_mission/save_waypoint std_msgs/msg/String "{data: 'A'}"
+  hoặc: ros2 run robot_mission_system operator_cli save A
+
+7) TEACH ĐIỂM B, C, …
+--------------------------------------------------------------------------------
+  Lặp lại với tên B, C, ...
+
+8) CHẠY MISSION A → B → C → D
+--------------------------------------------------------------------------------
+  ros2 topic pub --once /robot_mission/command std_msgs/msg/String \
+    '{data: "{\"cmd\":\"start\",\"waypoints\":[\"A\",\"B\",\"C\",\"D\"]}"}'
+  hoặc: ros2 run robot_mission_system operator_cli start A B C D
+
+9) PAUSE
+--------------------------------------------------------------------------------
+  ros2 run robot_mission_system operator_cli pause
+
+10) RESUME
+--------------------------------------------------------------------------------
+  ros2 run robot_mission_system operator_cli resume
+
+11) CANCEL
+--------------------------------------------------------------------------------
+  ros2 run robot_mission_system operator_cli cancel
+
+12) DEBUG KHÔNG TỚI ĐÍCH
+--------------------------------------------------------------------------------
+  Xem DEBUG_PLAYBOOK.txt và:
+  ros2 topic echo /robot_mission/snapshot
+  ros2 action list | findstr navigate
+  Kiểm tra /scan, /amcl_pose, costmap trên RViz.
+
+================================================================================
+LƯU Ý AN TOÀN
+--------------------------------------------------------------------------------
+- Luôn sẵn nút dừng khẩn (cut motor / joy priority cao).
+- Kiểm tra twist_mux: joystick priority 100 > precision 15 > navigation 10.
+
+================================================================================
