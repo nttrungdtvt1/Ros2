@@ -18,7 +18,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Robot Ops',
-    maintainer_email='ops@local',
+    maintainer_email='ops@local.com',
     description='Waypoint teach + Nav2 mission orchestration for differential robots.',
     license='Apache-2.0',
     tests_require=['pytest'],

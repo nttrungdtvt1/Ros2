@@ -32,11 +32,7 @@ class TeachWaypointNode(Node):
             10,
         )
         self.create_subscription(String, '/robot_mission/save_waypoint', self._on_save_name, 10)
-        self.get_logger().info(
-            'teach_waypoint ready; storage=%s subscribe=%s',
-            self._path,
-            amcl_topic,
-        )
+        self.get_logger().info(f'teach_waypoint ready; storage={self._path} subscribe={amcl_topic}')
 
     def _on_amcl(self, msg: PoseWithCovarianceStamped) -> None:
         self._last_amcl = msg
@@ -47,7 +43,7 @@ class TeachWaypointNode(Node):
             self.get_logger().warning('Empty waypoint name ignored')
             return
         if self._last_amcl is None:
-            self.get_logger().error('No AMCL pose received yet; cannot save %s', name)
+            self.get_logger().error(f'No AMCL pose received yet; cannot save {name}')
             return
         p = self._last_amcl.pose.pose.position
         o = self._last_amcl.pose.pose.orientation
@@ -64,7 +60,7 @@ class TeachWaypointNode(Node):
             meta={'source': 'amcl_pose'},
         )
         self._repo.upsert(rec)
-        self.get_logger().info("Saved waypoint '%s' -> %s", name, self._path)
+        self.get_logger().info(f"Saved waypoint '{name}' -> {self._path}")
 
 
 def main(args: list[str] | None = None) -> None:
