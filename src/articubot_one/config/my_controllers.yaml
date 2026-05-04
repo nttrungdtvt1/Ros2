@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 30
+    update_rate: 50
     # use_sim_time: true
 
     diff_cont:
@@ -16,9 +16,12 @@ diff_cont:
 
     base_frame_id: base_link
 
+    enable_odom_tf: true   # 🔥 THÊM DÒNG NÀY
+    odom_frame_id: odom    # 🔥 nên thêm luôn
+
     left_wheel_names: ['left_wheel_joint']
     right_wheel_names: ['right_wheel_joint']
-    wheel_separation: 0.188
+    wheel_separation: 0.185
     wheel_radius: 0.0325
 
     use_stamped_vel: false

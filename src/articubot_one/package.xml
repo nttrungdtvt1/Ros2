@@ -3,13 +3,39 @@
 <package format="3">
   <name>articubot_one</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Articubot One ROS 2 Description and Launch Package</description>
   <maintainer email="my_email@email.com">Josh Newans</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <!-- Core Robot Description -->
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <!-- Teleop & Mux -->
+  <exec_depend>twist_mux</exec_depend>
+  <exec_depend>joy</exec_depend>
+  <exec_depend>teleop_twist_joy</exec_depend>
+
+  <!-- Control & Simulation -->
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>ros2_control</exec_depend>
+  <exec_depend>ros2_controllers</exec_depend>
+  <exec_depend>gazebo_ros2_control</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+
+  <!-- Navigation 2 & SLAM -->
+  <exec_depend>navigation2</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+
+  <!-- Hardware, Sensors & Custom Packages -->
   <exec_depend>ldlidar</exec_depend>
+  <exec_depend>rplidar_ros</exec_depend>
+  <exec_depend>v4l2_camera</exec_depend>
+  <exec_depend>diffdrive_arduino</exec_depend>
+  <exec_depend>ball_tracker</exec_depend>
   <exec_depend>robot_mission_system</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>

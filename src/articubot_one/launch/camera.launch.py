@@ -5,8 +5,6 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
-
-
     return LaunchDescription([
 
         Node(
@@ -19,5 +17,5 @@ def generate_launch_description():
                 'time_per_frame': [1, 6],
                 'camera_frame_id': 'camera_link_optical'
                 }]
-    )
+        )
     ])

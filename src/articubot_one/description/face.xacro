@@ -24,7 +24,6 @@
             <material name="black"/>
         </visual>
 
-
         <visual>
             <origin xyz="-0.011 0 -0.00" rpy="0 ${1.5} 0"/>
             <geometry>
@@ -37,6 +36,5 @@
     <gazebo reference="face_link">
         <material>Gazebo/Black</material>
     </gazebo>
-
 
 </robot>

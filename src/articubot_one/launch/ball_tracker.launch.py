@@ -7,7 +7,6 @@ from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PythonExpression
 from launch.actions import DeclareLaunchArgument
 
-
 def generate_launch_description():
 
     my_package_name='articubot_one'
