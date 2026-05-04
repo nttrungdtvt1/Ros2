@@ -1,5 +1,5 @@
 # Copyright 2026 Robot Mission System
-"""Persistent waypoint storage (YAML). Thread-safe file I/O for teach + mission."""
+"""Persistent waypoint storage (YAML). Thread-safe file I/O with Hot-Reloading for teach + mission."""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ class WaypointRecord:
 
 
 class WaypointRepository:
-    """Load / save named poses. File format versioned for forward compatibility."""
+    """Load / save named poses. Features auto-hot-reloading to prevent RAM/Disk de-sync."""
 
     FILE_VERSION = 1
 
@@ -68,6 +68,7 @@ class WaypointRepository:
         self._path = os.path.expanduser(path)
         self._lock = threading.RLock()
         self._waypoints: Dict[str, WaypointRecord] = {}
+        self._last_mtime: float = -1.0  # TÁI CẤU TRÚC: Lưu trữ thời gian chỉnh sửa file cuối cùng
         self._load_or_init()
 
     @property
@@ -81,9 +82,25 @@ class WaypointRepository:
         self.reload()
 
     def reload(self) -> None:
+        """Tự động đồng bộ RAM với Ổ cứng nếu có thay đổi."""
         with self._lock:
+            # 1. Nếu file bị xóa đột ngột (ví dụ: gõ lệnh rm trên terminal)
+            if not os.path.isfile(self._path):
+                if self._waypoints:
+                    _LOG.warning('Waypoint file missing from disk! Auto-clearing RAM cache.')
+                    self._waypoints.clear()
+                    self._last_mtime = -1.0
+                return
+
+            # 2. Nếu file không bị thay đổi (Tối ưu hóa: bỏ qua đọc đĩa để tiết kiệm CPU)
+            current_mtime = os.path.getmtime(self._path)
+            if current_mtime == self._last_mtime:
+                return
+
+            # 3. Nếu file có nội dung mới (Ai đó sửa bằng nano hoặc file mới được tạo lại)
             with open(self._path, 'r', encoding='utf-8') as f:
                 raw = yaml.safe_load(f) or {}
+            
             wps = raw.get('waypoints') or []
             self._waypoints = {}
             for item in wps:
@@ -92,22 +109,28 @@ class WaypointRepository:
                     self._waypoints[rec.name] = rec
                 except (KeyError, TypeError, ValueError) as e:
                     _LOG.warning('Skip invalid waypoint entry %s: %s', item, e)
+            
+            self._last_mtime = current_mtime
 
     def list_names(self) -> List[str]:
         with self._lock:
+            self.reload() # Đảm bảo luôn lấy danh sách mới nhất
             return sorted(self._waypoints.keys())
 
     def get(self, name: str) -> Optional[WaypointRecord]:
         with self._lock:
+            self.reload() # Đảm bảo điểm chưa bị xóa khỏi đĩa
             return self._waypoints.get(name)
 
     def upsert(self, rec: WaypointRecord) -> None:
         with self._lock:
+            self.reload() # Đọc đĩa trước khi Ghi đè để tránh "Hồi sinh" điểm cũ
             self._waypoints[rec.name] = rec
             self._persist_unlocked()
 
     def delete(self, name: str) -> bool:
         with self._lock:
+            self.reload() # Đọc đĩa trước khi xóa
             if name not in self._waypoints:
                 return False
             del self._waypoints[name]
@@ -120,6 +143,10 @@ class WaypointRepository:
             'waypoints': [w.to_dict() for w in sorted(self._waypoints.values(), key=lambda x: x.name)],
         }
         self._atomic_write(data)
+        
+        # Cập nhật mtime sau khi chính mình ghi file để tránh reload thừa thãi
+        if os.path.isfile(self._path):
+            self._last_mtime = os.path.getmtime(self._path)
 
     def _atomic_write(self, data: Dict[str, Any]) -> None:
         directory = os.path.dirname(self._path)
