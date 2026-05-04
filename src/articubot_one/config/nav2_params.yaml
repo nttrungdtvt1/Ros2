@@ -44,6 +44,7 @@ bt_navigator:
     use_sim_time: False
     global_frame: map
     robot_base_frame: base_link
+    transform_tolerance: 1.0
     odom_topic: /odom
     bt_loop_duration: 10
     default_server_timeout: 20
@@ -111,21 +112,22 @@ controller_server:
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
+    transform_tolerance: 1.0
     progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"] 
     controller_plugins: ["FollowPath"]
 
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.15
-      movement_time_allowance: 15.0
+      required_movement_radius: 0.5
+      movement_time_allowance: 10.0
 
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.20   
-      yaw_goal_tolerance: 0.30  
-
+      xy_goal_tolerance: 0.15
+      yaw_goal_tolerance: 0.08
+    # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
@@ -133,36 +135,39 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.26
       max_vel_y: 0.0
-      max_vel_theta: 1.8       
-      min_speed_theta: 0.2     
+      max_vel_theta: 1.0
       min_speed_xy: 0.0
       max_speed_xy: 0.26
+      min_speed_theta: 0.0
       acc_lim_x: 2.5
       acc_lim_y: 0.0
       acc_lim_theta: 3.2
       decel_lim_x: -2.5
       decel_lim_y: 0.0
       decel_lim_theta: -3.2
-      vx_samples: 15
-      vy_samples: 1   
-      vtheta_samples: 15
-      sim_time: 1.7
+      
+      # TỐI ƯU CỰC ĐẠI: Tăng số lượng mẫu góc để xe đi thẳng, không bị bẻ cong
+      vx_samples: 20
+      vy_samples: 1   # Diff-drive không đi ngang
+      vtheta_samples: 40
+      
+      sim_time: 2.0
       linear_granularity: 0.05
       angular_granularity: 0.025
-      transform_tolerance: 0.5
-      xy_goal_tolerance: 0.20
+      transform_tolerance: 1.0
+      xy_goal_tolerance: 0.15
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: True
       stateful: True
       critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 1.0
-      PathAlign.scale: 32.0
+      BaseObstacle.scale: 0.02
+      PathAlign.scale: 64.0
       PathAlign.forward_point_distance: 0.1
-      GoalAlign.scale: 24.0
+      GoalAlign.scale: 5.0
       GoalAlign.forward_point_distance: 0.1
-      PathDist.scale: 32.0
+      PathDist.scale: 64.0
       GoalDist.scale: 24.0
-      RotateToGoal.scale: 20.0
+      RotateToGoal.scale: 16.0
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
 
@@ -171,19 +176,20 @@ local_costmap:
     ros__parameters:
       update_frequency: 10.0
       publish_frequency: 5.0
+      transform_tolerance: 1.0
       global_frame: odom
       robot_base_frame: base_link
       use_sim_time: False
       rolling_window: true
-      width: 5
-      height: 5
+      width: 3
+      height: 3
       resolution: 0.05
-      robot_radius: 0.15
+      robot_radius: 0.23
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 10.0
-        inflation_radius: 0.7
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.1
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -201,9 +207,9 @@ local_costmap:
           marking: True
           data_type: "LaserScan"
           raytrace_max_range: 3.0
-          raytrace_min_range: 0.20
+          raytrace_min_range: 0.0
           obstacle_max_range: 2.5
-          obstacle_min_range: 0.20
+          obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -214,10 +220,11 @@ global_costmap:
     ros__parameters:
       update_frequency: 1.0
       publish_frequency: 1.0
+      transform_tolerance: 1.0
       global_frame: map
       robot_base_frame: base_link
       use_sim_time: False
-      robot_radius: 0.15
+      robot_radius: 0.2
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -232,16 +239,16 @@ global_costmap:
           marking: True
           data_type: "LaserScan"
           raytrace_max_range: 3.0
-          raytrace_min_range: 0.20
+          raytrace_min_range: 0.0
           obstacle_max_range: 2.5
-          obstacle_min_range: 0.20
+          obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 10.0
-        inflation_radius: 0.7
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.1
       always_send_full_costmap: True
 
 map_server:
@@ -259,13 +266,13 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0
+    expected_planner_frequency: 5.0
     use_sim_time: False
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
       tolerance: 0.5
-      use_astar: false
+      use_astar: true
       allow_unknown: true
 
 smoother_server:
@@ -296,10 +303,10 @@ behavior_server:
       plugin: "nav2_behaviors/AssistedTeleop"
     global_frame: odom
     robot_base_frame: base_link
-    transform_tolerance: 0.1
+    transform_tolerance: 1.0
     use_sim_time: false
     simulate_ahead_time: 2.0
-    max_rotational_vel: 1.8
+    max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
 
@@ -324,8 +331,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.26, 0.0, 1.8]
-    min_velocity: [-0.26, 0.0, -1.8]
+    max_velocity: [0.26, 0.0, 1.0]
+    min_velocity: [-0.26, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"
